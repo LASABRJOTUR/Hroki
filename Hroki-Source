@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HROKI</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg stroke='%23c81e1e' stroke-width='9' fill='none' stroke-linecap='round'%3E%3Cline x1='6' y1='51.6' x2='193.6' y2='51.6'/%3E%3Cline x1='6' y1='148.2' x2='193.6' y2='148.2'/%3E%3Cline x1='28.5' y1='30.4' x2='28.5' y2='169.4'/%3E%3Cline x1='171.1' y1='30.4' x2='171.1' y2='169.4'/%3E%3Cline x1='99.8' y1='7.2' x2='99.8' y2='192.6'/%3E%3Cline x1='73.6' y1='23.3' x2='126' y2='23.3'/%3E%3Cline x1='73.6' y1='176.5' x2='126' y2='176.5'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --panel: #0f0f0f;
+    --red: #c81e1e;
+    --red-dim: #6e1010;
+    --red-faint: #3a0a0a;
+    --red-bright: #e23434;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--red);
+    font-family: "Courier New", Courier, monospace;
+    min-height: 100vh;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 14px;
+  }
+
+  .console {
+    width: 100%;
+    max-width: 760px;
+    border: 2px solid var(--red);
+    padding: 2px;
+  }
+
+  .console-inner {
+    border: 1px solid var(--red-dim);
+    padding: 18px 20px 20px;
+  }
+
+  /* ---------- Header ---------- */
+  .header {
+    border-bottom: 2px solid var(--red);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-title {
+    text-align: center;
+  }
+
+  .title {
+    font-family: 'VT323', 'Courier New', Courier, monospace;
+    font-size: 46px;
+    font-weight: normal;
+    letter-spacing: 12px;
+    margin: 0;
+    line-height: 1;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--red-dim);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .header-emblem {
+    width: 56px;
+    height: 56px;
+  }
+
+  .header-emblem-left {
+    justify-self: start;
+  }
+
+  .header-emblem-right {
+    justify-self: end;
+  }
+
+  .header-emblem svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* ---------- Section blocks ---------- */
+  .block {
+    border: 1px solid var(--red-dim);
+    margin-bottom: 14px;
+  }
+
+  .block-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--red-dim);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .block-body {
+    padding: 12px;
+  }
+
+  /* ---------- File intake ---------- */
+  .intake-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+
+  .btn {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid var(--red);
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 9px 16px;
+    cursor: pointer;
+  }
+
+  .btn:hover {
+    background: var(--red);
+    color: var(--bg);
+  }
+
+  .btn:disabled {
+    color: var(--red-dim);
+    border-color: var(--red-dim);
+    cursor: default;
+  }
+
+  .btn:disabled:hover {
+    background: transparent;
+    color: var(--red-dim);
+  }
+
+  .btn-primary {
+    border-width: 2px;
+  }
+
+  .file-count {
+    font-size: 11px;
+    color: var(--red-dim);
+  }
+
+  /* ---------- Loaded file list ---------- */
+  .file-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .file-table th {
+    text-align: left;
+    font-weight: normal;
+    letter-spacing: 1px;
+    color: var(--red-dim);
+    border-bottom: 1px solid var(--red-dim);
+    padding: 4px 6px;
+  }
+
+  .file-table td {
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--red-faint);
+  }
+
+  .file-table tr.row-error td {
+    color: var(--red-dim);
+    font-style: italic;
+  }
+
+  .empty-row {
+    color: var(--red-dim);
+    font-size: 12px;
+    padding: 4px 6px;
+  }
+
+  .remove-x {
+    cursor: pointer;
+    color: var(--red-dim);
+  }
+  .remove-x:hover {
+    color: var(--red-bright);
+  }
+
+  /* ---------- Log ---------- */
+  .log {
+    height: 170px;
+    overflow-y: auto;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  .log-line::before {
+    content: "> ";
+    color: var(--red-dim);
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 8px;
+    background: var(--red);
+    animation: blink 1s steps(1) infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  /* ---------- Output row ---------- */
+  .output-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .output-row input[type="text"] {
+    background: var(--bg);
+    border: 1px solid var(--red-dim);
+    color: var(--red);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 9px 10px;
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .output-row input[type="text"]:focus {
+    outline: 1px solid var(--red);
+  }
+
+  .summary-line {
+    font-size: 12px;
+    margin-top: 10px;
+    color: var(--red-dim);
+  }
+
+  .summary-line strong {
+    color: var(--red);
+    font-weight: normal;
+  }
+
+  /* ---------- Footer ---------- */
+  .credit-console {
+    width: 100%;
+    max-width: 760px;
+    border: 2px solid var(--red);
+    padding: 2px;
+    margin-top: 14px;
+  }
+
+  .credit-console-inner {
+    border: 1px solid var(--red-dim);
+    padding: 8px 20px;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--red-dim);
+    font-style: italic;
+  }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--red-dim); }
+</style>
+</head>
+<body>
+
+<div class="console">
+  <div class="console-inner">
+
+    <div class="header">
+      <div class="header-emblem header-emblem-left">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g stroke="#c81e1e" stroke-width="14" fill="none" stroke-linecap="round">
+            <path d="M178.8,113.9 A80,80 0 0,1 113.9,178.8"/>
+            <path d="M86.1,178.8 A80,80 0 0,1 21.2,113.9"/>
+            <path d="M21.2,86.1 A80,80 0 0,1 86.1,21.2"/>
+            <path d="M113.9,21.2 A80,80 0 0,1 178.8,86.1"/>
+          </g>
+        </svg>
+      </div>
+      <div class="header-title">
+        <p class="title">HROKI</p>
+        <p class="subtitle">Pride kills.</p>
+      </div>
+      <div class="header-emblem header-emblem-right">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g stroke="#c81e1e" stroke-width="9" fill="none" stroke-linecap="round">
+            <line x1="6" y1="51.6" x2="193.6" y2="51.6"/>
+            <line x1="6" y1="148.2" x2="193.6" y2="148.2"/>
+            <line x1="28.5" y1="30.4" x2="28.5" y2="169.4"/>
+            <line x1="171.1" y1="30.4" x2="171.1" y2="169.4"/>
+            <line x1="99.8" y1="7.2" x2="99.8" y2="192.6"/>
+            <line x1="73.6" y1="23.3" x2="126" y2="23.3"/>
+            <line x1="73.6" y1="176.5" x2="126" y2="176.5"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-label"><span>FILE INTAKE</span><span id="fileCountLabel">0 LOADED</span></div>
+      <div class="block-body">
+        <div class="intake-row">
+          <input type="file" id="fileInput" accept=".json,application/json" multiple>
+          <button class="btn" id="loadBtn">SELECT FILES</button>
+          <button class="btn" id="clearBtn">CLEAR ALL</button>
+          <span class="file-count" id="fileCountText">no files in tray</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-label"><span>LOADED SOURCES</span><span>STEAMID ENTRY COUNT</span></div>
+      <div class="block-body">
+        <table class="file-table" id="fileTable">
+          <thead>
+            <tr><th>FILE</th><th>ENTRIES</th><th>STATUS</th><th></th></tr>
+          </thead>
+          <tbody id="fileTableBody">
+            <tr><td colspan="4" class="empty-row">-- no sources loaded --</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-label"><span>CONSOLE LOG</span><span id="clock">00:00:00</span></div>
+      <div class="block-body">
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-label"><span>MERGE / EXPORT</span></div>
+      <div class="block-body">
+        <div class="output-row">
+          <input type="text" id="outName" value="HrokiList" spellcheck="false">
+          <span class="file-count">.json</span>
+          <button class="btn btn-primary" id="mergeBtn" disabled>MERGE LOADED FILES</button>
+          <button class="btn" id="downloadBtn" disabled>EXPORT OUTPUT</button>
+        </div>
+        <div class="summary-line" id="summaryLine">awaiting merge — load files to begin</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="credit-console">
+  <div class="credit-console-inner">Vibecoded by Bekymre.</div>
+</div>
+
+<script>
+(function () {
+  const fileInput = document.getElementById('fileInput');
+  const loadBtn = document.getElementById('loadBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const fileTableBody = document.getElementById('fileTableBody');
+  const fileCountLabel = document.getElementById('fileCountLabel');
+  const fileCountText = document.getElementById('fileCountText');
+  const logEl = document.getElementById('log');
+  const mergeBtn = document.getElementById('mergeBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const outName = document.getElementById('outName');
+  const summaryLine = document.getElementById('summaryLine');
+  const clockEl = document.getElementById('clock');
+
+  let sources = []; // { id, name, ok, entries, data, error }
+  let mergedResult = null;
+  let nextId = 1;
+
+  function tick() {
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    clockEl.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  function log(msg) {
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.textContent = msg;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  log('HROKI TERMINAL READY.');
+  log('AWAITING FILE INTAKE...');
+
+  loadBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    let pending = files.length;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        processFile(file.name, reader.result);
+        pending -= 1;
+        if (pending === 0) finishIntake();
+      };
+      reader.onerror = () => {
+        sources.push({ id: nextId++, name: file.name, ok: false, entries: 0, error: 'READ FAILURE' });
+        log('ERROR: could not read ' + file.name);
+        pending -= 1;
+        if (pending === 0) finishIntake();
+      };
+      reader.readAsText(file);
+    });
+
+    fileInput.value = '';
+  });
+
+  function processFile(name, text) {
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (err) {
+      sources.push({ id: nextId++, name, ok: false, entries: 0, error: 'INVALID JSON' });
+      log('ERROR: ' + name + ' is not valid JSON');
+      return;
+    }
+    if (!json || !Array.isArray(json.players)) {
+      sources.push({ id: nextId++, name, ok: false, entries: 0, error: 'NO PLAYERS ARRAY' });
+      log('ERROR: ' + name + ' missing "players" array');
+      return;
+    }
+    const validPlayers = json.players.filter(p => p && typeof p.steamid === 'string');
+    sources.push({ id: nextId++, name, ok: true, entries: validPlayers.length, data: json });
+    log('LOADED ' + name + ' :: ' + validPlayers.length + ' entries');
+  }
+
+  function finishIntake() {
+    renderTable();
+    mergeBtn.disabled = sources.filter(s => s.ok).length === 0;
+  }
+
+  function renderTable() {
+    fileCountLabel.textContent = sources.length + ' LOADED';
+    fileCountText.textContent = sources.length
+      ? sources.length + ' file(s) in tray'
+      : 'no files in tray';
+
+    if (!sources.length) {
+      fileTableBody.innerHTML = '<tr><td colspan="4" class="empty-row">-- no sources loaded --</td></tr>';
+      return;
+    }
+
+    const display = sources.slice().sort((a, b) => (b.entries || 0) - (a.entries || 0));
+
+    fileTableBody.innerHTML = '';
+    display.forEach(s => {
+      const tr = document.createElement('tr');
+      if (!s.ok) tr.classList.add('row-error');
+      tr.innerHTML =
+        '<td>' + escapeHtml(s.name) + '</td>' +
+        '<td>' + (s.ok ? s.entries : '--') + '</td>' +
+        '<td>' + (s.ok ? 'OK' : s.error) + '</td>' +
+        '<td class="remove-x" data-id="' + s.id + '">[X]</td>';
+      fileTableBody.appendChild(tr);
+    });
+
+    fileTableBody.querySelectorAll('.remove-x').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = parseInt(el.getAttribute('data-id'), 10);
+        const i = sources.findIndex(s => s.id === id);
+        if (i === -1) return;
+        log('REMOVED ' + sources[i].name + ' FROM TRAY');
+        sources.splice(i, 1);
+        renderTable();
+        mergeBtn.disabled = sources.filter(s => s.ok).length === 0;
+        downloadBtn.disabled = true;
+        mergedResult = null;
+        summaryLine.textContent = 'source list changed — re-run merge';
+      });
+    });
+  }
+
+  clearBtn.addEventListener('click', () => {
+    sources = [];
+    mergedResult = null;
+    renderTable();
+    mergeBtn.disabled = true;
+    downloadBtn.disabled = true;
+    summaryLine.textContent = 'awaiting merge — load files to begin';
+    log('TRAY CLEARED.');
+  });
+
+  mergeBtn.addEventListener('click', () => {
+    const valid = sources.filter(s => s.ok);
+    if (!valid.length) return;
+
+    log('--------------------------------');
+
+    // PHASE 1: scan every source and record every steamid seen, with its
+    // attributes, before any merging happens. This is the reference set
+    // used later to confirm nothing was dropped.
+    log('SCANNING SOURCES FOR STEAMIDS...');
+    const scanned = new Map(); // steamid -> Set of attributes (union across all sources)
+    valid.forEach(s => {
+      s.data.players.forEach(p => {
+        if (!p || typeof p.steamid !== 'string') return;
+        const attrs = Array.isArray(p.attributes) ? p.attributes : [];
+        if (!scanned.has(p.steamid)) scanned.set(p.steamid, new Set());
+        attrs.forEach(a => scanned.get(p.steamid).add(a));
+      });
+    });
+    log('SCAN COMPLETE: ' + scanned.size + ' unique steamID(s) across ' + valid.length + ' source(s)');
+
+    log('INITIATING MERGE OF ' + valid.length + ' SOURCE(S)...');
+
+    const schema = valid[0].data['$schema'] || 'https://raw.githubusercontent.com/PazerOP/tf2_bot_detector/master/schemas/v3/playerlist.schema.json';
+    const authors = new Set();
+    const sourceTitles = [];
+
+    valid.forEach(s => {
+      const info = s.data.file_info || {};
+      (info.authors || []).forEach(a => authors.add(a));
+      if (info.title) sourceTitles.push(info.title);
+      else sourceTitles.push(s.name);
+    });
+
+    // PHASE 2: build the merged player map the normal way.
+    const playerMap = new Map(); // steamid -> Set of attributes
+    let duplicateCount = 0;
+
+    valid.forEach(s => {
+      s.data.players.forEach(p => {
+        if (!p || typeof p.steamid !== 'string') return;
+        const attrs = Array.isArray(p.attributes) ? p.attributes : [];
+        if (playerMap.has(p.steamid)) {
+          duplicateCount += 1;
+          const set = playerMap.get(p.steamid);
+          attrs.forEach(a => set.add(a));
+        } else {
+          playerMap.set(p.steamid, new Set(attrs));
+        }
+      });
+    });
+
+    // PHASE 3: verify every steamid from the initial scan made it into the
+    // merged map. If anything is missing, recover it from the scan data.
+    log('VERIFYING MERGED OUTPUT AGAINST SCAN...');
+    let recoveredCount = 0;
+    scanned.forEach((attrSet, steamid) => {
+      if (!playerMap.has(steamid)) {
+        playerMap.set(steamid, new Set(attrSet));
+        recoveredCount += 1;
+        log('MISSING ENTRY RECOVERED: ' + steamid);
+      }
+    });
+
+    if (recoveredCount > 0) {
+      log('INTEGRITY CHECK: ' + recoveredCount + ' missing entry(ies) restored.');
+    } else {
+      log('INTEGRITY CHECK PASSED: all scanned steamIDs present.');
+    }
+
+    const mergedPlayers = Array.from(playerMap.entries()).map(([steamid, attrSet]) => ({
+      attributes: Array.from(attrSet),
+      steamid
+    }));
+
+    mergedResult = {
+      '$schema': schema,
+      file_info: {
+        authors: Array.from(authors),
+        description: 'Merged list — ' + sourceTitles.length + ' source(s): ' + sourceTitles.join(' | '),
+        title: 'HROKI merged list (' + sourceTitles.length + ' sources)'
+      },
+      players: mergedPlayers
+    };
+
+    log('MERGE COMPLETE.');
+    log('TOTAL UNIQUE ENTRIES: ' + mergedPlayers.length);
+    if (duplicateCount) log('DUPLICATE STEAMIDS RESOLVED: ' + duplicateCount);
+
+    summaryLine.innerHTML = 'MERGE COMPLETE — <strong>' + mergedPlayers.length +
+      '</strong> unique entries from <strong>' + valid.length + '</strong> source(s)' +
+      (duplicateCount ? ', <strong>' + duplicateCount + '</strong> duplicate ID(s) resolved' : '') +
+      (recoveredCount ? ', <strong>' + recoveredCount + '</strong> entry(ies) recovered on verify' : '');
+
+    downloadBtn.disabled = false;
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    if (!mergedResult) return;
+    const name = (outName.value || 'HrokiList').trim().replace(/\.json$/i, '') || 'HrokiList';
+    const blob = new Blob([JSON.stringify(mergedResult, null, '\t')], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    log('EXPORTED ' + name + '.json TO LOCAL DRIVE.');
+  });
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[c]);
+  }
+})();
+</script>
+
+</body>
+</html>
