@@ -15671,7 +15671,7 @@
 		{
 			"attributes": [
 				"cheater",
-				"exploiter"
+				"suspicious"
 			],
 			"steamid": "[U:1:1008050763]"
 		},
@@ -16543,7 +16543,7 @@
 		{
 			"attributes": [
 				"cheater",
-				"exploiter"
+				"suspicious"
 			],
 			"steamid": "[U:1:1094511355]"
 		},
@@ -18408,7 +18408,7 @@
 		},
 		{
 			"attributes": [
-				"exploiter"
+				"suspicious"
 			],
 			"steamid": "[U:1:1121623756]"
 		},
