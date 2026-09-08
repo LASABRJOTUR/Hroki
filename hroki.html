@@ -500,7 +500,22 @@
       log('ERROR: ' + name + ' contains no SteamIDs');
       return;
     }
-    sources.push({ id: nextId++, name, ok: true, entries: validPlayers.length, data: json, noChanges: true, suspicious: true, extraAttrs: [] });
+
+    // If this file is itself a previous HROKI export, it already carries
+    // the full list of group names archived into it — inherit that whole
+    // history instead of treating the export as a single new group.
+    const info = json.file_info || {};
+    let archivedGroups;
+    if (Array.isArray(info.hroki_archived_groups) && info.hroki_archived_groups.length) {
+      archivedGroups = info.hroki_archived_groups.slice();
+    } else {
+      archivedGroups = [info.title || name];
+    }
+
+    sources.push({
+      id: nextId++, name, ok: true, entries: validPlayers.length, data: json,
+      noChanges: true, suspicious: true, extraAttrs: [], archivedGroups
+    });
     log('LOADED ' + name + ' :: ' + validPlayers.length + ' SteamIDs');
   }
 
@@ -692,14 +707,21 @@
 
     const schema = valid[0].data['$schema'] || 'https://raw.githubusercontent.com/PazerOP/tf2_bot_detector/master/schemas/v3/playerlist.schema.json';
     const authors = new Set();
-    const sourceTitles = [];
+
+    // Every archived group name is carried forward here — including groups
+    // that arrived indirectly through a previously-exported HROKI file —
+    // so re-merging an export later still reports the full lineage of
+    // groups, not just the files loaded in this particular merge.
+    const archivedGroupSet = new Set();
 
     valid.forEach(s => {
       const info = s.data.file_info || {};
       (info.authors || []).forEach(a => authors.add(a));
-      if (info.title) sourceTitles.push(info.title);
-      else sourceTitles.push(s.name);
+      (s.archivedGroups || [s.name]).forEach(g => archivedGroupSet.add(g));
     });
+
+    const archivedGroups = Array.from(archivedGroupSet);
+    log('ARCHIVED GROUPS (' + archivedGroups.length + '): ' + archivedGroups.join(', '));
 
     // PHASE 2: build the merged player map. Every occurrence of a steamid —
     // whether it's a duplicate across different files or repeated within
@@ -767,8 +789,9 @@
       '$schema': schema,
       file_info: {
         authors: Array.from(authors),
-        description: 'Merged list — ' + sourceTitles.length + ' source(s): ' + sourceTitles.join(' | '),
-        title: 'HROKI merged list (' + sourceTitles.length + ' sources)'
+        description: 'Merged list — ' + archivedGroups.length + ' source group(s) archived: ' + archivedGroups.join(', '),
+        title: 'HROKI merged list (' + archivedGroups.length + ' groups)',
+        hroki_archived_groups: archivedGroups
       },
       players: mergedPlayers
     };
@@ -778,7 +801,7 @@
     if (duplicateCount) log('DUPLICATE STEAMIDS RESOLVED: ' + duplicateCount);
 
     summaryLine.innerHTML = 'MERGE COMPLETE — <strong>' + mergedPlayers.length +
-      '</strong> unique SteamIDs from <strong>' + valid.length + '</strong> source(s)' +
+      '</strong> unique SteamIDs from <strong>' + archivedGroups.length + '</strong> archived group(s)' +
       (duplicateCount ? ', <strong>' + duplicateCount + '</strong> duplicate ID(s) resolved' : '') +
       (recoveredCount ? ', <strong>' + recoveredCount + '</strong> SteamID(s) recovered on verify' : '') +
       (cheaterOverrideCount ? ', <strong>' + cheaterOverrideCount + '</strong> "suspicious" tag(s) dropped for cheaters' : '');
@@ -789,16 +812,17 @@
   downloadBtn.addEventListener('click', () => {
     if (!mergedResult) return;
     const name = (outName.value || 'HrokiList').trim().replace(/\.json$/i, '') || 'HrokiList';
+    const filename = name + '.json';
     const blob = new Blob([JSON.stringify(mergedResult, null, '\t')], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = name + '.json';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    log('EXPORTED ' + name + '.json TO LOCAL DRIVE.');
+    log('EXPORTED ' + filename + ' TO LOCAL DRIVE.');
   });
 
   function escapeHtml(str) {
